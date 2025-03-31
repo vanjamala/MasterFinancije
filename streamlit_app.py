@@ -235,19 +235,7 @@ else:
         df['Ukupno sati bez sati SP (SP sati uračunato u Rad sati)'] = df[['Rad sati', 'Rad od kuće sati', 'Praznik sati', 'G.O. sati', 'Dopust sati', 'Bolo. sati','HZZO sati','Školovanje sati','Pas. dež. sati']].sum(axis=1)
         # Report
         st.write(df)
-        # Allow downloading the merged data
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            df.to_excel(writer, index=False, sheet_name="Izvještaj MT financije")
-        output.seek(0)
-
-        st.download_button(
-            label="Preuzmi spojene tablice",
-            data=output,
-            file_name="merged_report.xlsx",
-            mime="application/vnd.ms-excel"
-        )
-                # Create an Excel workbook and add the DataFrame to it
+        # Create an Excel workbook and add the DataFrame to it
         wb = Workbook()
         sheet = wb.active
 
@@ -278,10 +266,28 @@ else:
         wb.save(output)
         output.seek(0)  # Reset pointer to start
 
-        # Provide the file for download via Streamlit
+        # Create a flag to track when the download is complete
+        if "downloaded" not in st.session_state:
+            st.session_state["downloaded"] = False
+
+        # Generate and offer the file for download
         st.download_button(
             label="Preuzmi tablicu u boji",
             data=output,
             file_name="colored_output.xlsx",
-            mime="application/vnd.ms-excel"
+            mime="application/vnd.ms-excel",
+            on_click=lambda: st.session_state.update({"downloaded": True})  # Set the flag
         )
+
+        # Clear the uploaded files **only after the user has clicked download**
+        if st.session_state["downloaded"]:
+            st.session_state.pop("uploaded_masterteam", None)
+            st.session_state.pop("uploaded_pn", None)
+            st.session_state["upload_reset"] = st.session_state.get("upload_reset", 0) + 1
+            st.session_state["downloaded"] = False  # Reset the flag
+            st.experimental_rerun()  # Rerun to refresh the file uploader
+
+
+       
+
+        
