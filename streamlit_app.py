@@ -26,6 +26,7 @@ else:
     # Process files if uploaded and inputs are valid
     if uploaded_masterteam and uploaded_pn and st.button('Spoji podatke i pripremi izvještaj'):
         df = pd.read_excel(uploaded_masterteam, header=3, engine='xlrd')
+        
         df_pn = pd.read_excel(uploaded_pn, header=3, engine='xlrd')
                 # Filter out unnamed columns
         df = df.loc[:, ~df.columns.str.contains('^Unnamed', na=False)]
@@ -38,6 +39,11 @@ else:
         # Rearrange columns: make PREZIME i IME the first column
         columns_order = ['PREZIME i IME'] + [col for col in df.columns if col not in ['PREZIME i IME', 'Prezime', 'Ime']]
         df = df[columns_order]
+        # Filter the DataFrame for "Jovanović Rimac Ivana" in uppercase
+        filtered_row = df[df["PREZIME i IME"].str.upper() == "JOVANOVIĆ RIMAC IVANA"]
+
+        # Select the first 5 columns and print them
+        print(filtered_row.iloc[:, :5])
 
         # Step 1: Remove columns that start with "Su" or "Ne" and rename totals to hours colums
         columns_to_remove = [col for col in df.columns if col.startswith("Su") or col.startswith("Ne")]
@@ -59,7 +65,7 @@ else:
             # Attempt to find a day number (it can be one or two digits)
             day_match = re.search(r'(\d{1,2})', clean_col)  # Match one or two digits
 
-            print(day_match)
+            #print(day_match)
 
             if day_match:
                 # Get the day as a two-digit number (e.g., 1 becomes 01)
@@ -78,8 +84,7 @@ else:
         # Identify the columns that are in date format (MM.DD.YYYY)
         for col in df.columns:
             if re.match(r'\d{2}\.\d{2}\.\d{4}', col):  # Match MM.DD.YYYY format
-                df[col] = df[col].apply(lambda x: "RR" if isinstance(x, (int, float)) or str(x).replace('.', '', 1).isdigit() else x)
-
+                df[col] = df[col].apply(lambda x: "RR" if (not pd.isna(x)) and (isinstance(x, (int, float)) or str(x).replace('.', '', 1).isdigit()) else x)
 
         # Step 5: Import putne naloge,transform data and update df with službena putovanja
         df_pn = df_pn[df_pn['Broj PN\n'] != 'SVEUKUPNO']
@@ -119,9 +124,9 @@ else:
 
                 # Update the corresponding cell for the person and date to "SP"
                 df.loc[df['PREZIME i IME'] == person, date_str] = "SP"
-            else:
+            #else:
                 # Debug: If no match found, print a message
-                print(f"No matching column for date {date_str}")
+                #print(f"No matching column for date {date_str}")
 
         # Step 6: Insert new columns RR, GO, DODATI, and UKUPNO after the date columns
         # Identify the columns that are in date format (MM.DD.YYYY)
@@ -133,7 +138,7 @@ else:
         def SP_count(row, date_columns):
             count = 0
             # Loop through the date columns (starting from the 3rd column)
-            for i in range(2, len(date_columns)):  # Adjusted to start at index 2 (3rd column)
+            for i in range(2, len(date_columns) + 2):  # Adjusted to start at index 2 (3rd column)
                 value = row[i]
 
                 if value != 'SP':  # We're only interested in 'SP'
@@ -151,7 +156,7 @@ else:
                         break
 
                 # Check to the right (after the current "SP")
-                for right in range(i + 1, len(date_columns)):  # Loop forwards, but only up to the last date column
+                for right in range(i + 1, len(date_columns) +2 ):  # Loop forwards, but only up to the last date column
                     if row[right] == 'SP':  # Non-"SP" value
                         right_count += 1
                     else:
@@ -252,10 +257,10 @@ else:
         # Apply colors based on "Status" column
         for row in sheet.iter_rows(min_row=2):  # Assuming first row is a header  # Focus on first column
             for cell in row:
-                print(f"Cell {cell.coordinate} has value: {cell.value}")  # Debug to confirm values
+                #print(f"Cell {cell.coordinate} has value: {cell.value}")  # Debug to confirm values
                 if cell.value == "RR":
                     cell.fill = green_fill
-                    print(f"Cell {cell.coordinate} formatted with green_fill")  # Debug
+                    #print(f"Cell {cell.coordinate} formatted with green_fill")  # Debug
                 elif cell.value == "G":
                     cell.fill = yellow_fill
                 elif cell.value == "SP":
