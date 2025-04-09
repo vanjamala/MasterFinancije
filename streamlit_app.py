@@ -135,6 +135,43 @@ else:
         # For each row, calculate RR, GO, DODATI, and UKUPNO
         df['RR dani'] = df[date_columns].apply(lambda row: row.astype(str).tolist().count('RR'), axis=1)
         df['GO dani'] = df[date_columns].apply(lambda row: row.astype(str).tolist().count('G'), axis=1)
+        def count_GO_sa(row, date_columns):
+            count = 0
+            # Only loop through date columns (from the 3rd column onward)
+            for i in range(2, len(date_columns) + 2):  # Adjusted to start at index 2
+                value = row[i]
+
+                if value != 'G':
+                    continue  # Skip if it's "RR"
+
+                # Check the consecutive sequence before and after the current value
+                left_count = 0
+                right_count = 0
+
+                # Check to the left (before the current value)
+                for left in range(i - 1, 2 - 1, -1):  # Loop backwards, but only up to date_columns
+                    if row[left] != 'RR' and row[left] != 'SP':  # Non-"RR" and non "SP" value
+                        left_count += 1
+                    else:
+                        break
+
+                # Check to the right (after the current value)
+                for right in range(i + 1, len(date_columns) + 2):  # Loop forwards, but only up to date_columns
+                    if row[right] != 'RR' and row[right] != 'SP':  # Non-"RR" and non "SP" value
+                        right_count += 1
+                    else:
+                        break
+
+                # If the sum of left_count and right_count is 2 or more, we have a streak
+                if left_count + right_count >= 2:
+                    continue  # Don't count this value, as it's part of a streak
+
+                # Otherwise, count this value
+                count += 1
+
+            return count
+        df['GO s prijevozom'] = df.apply(lambda row: count_GO_sa(row, date_columns), axis=1)
+        df['GO bez prijevoza'] = df['GO dani'] -df['GO s prijevozom']
         def SP_count(row, date_columns):
             count = 0
             # Loop through the date columns (starting from the 3rd column)
@@ -222,10 +259,12 @@ else:
         # Insert the new columns at the right place
         df.insert(date_column_index, 'RR dani', df.pop('RR dani'))
         df.insert(date_column_index + 1, 'GO dani', df.pop('GO dani'))
-        df.insert(date_column_index + 2, 'SP dani', df.pop('SP dani'))
-        df.insert(date_column_index + 3, 'SP prijevoz', df.pop('SP prijevoz'))
-        df.insert(date_column_index + 4, 'DODATI dani', df.pop('DODATI dani'))
-        df.insert(date_column_index + 5, 'UKUPNO dani', df.pop('UKUPNO dani'))
+        df.insert(date_column_index + 2, 'GO s prijevozom', df.pop('GO s prijevozom'))
+        df.insert(date_column_index + 3, 'GO bez prijevoza', df.pop('GO bez prijevoza'))
+        df.insert(date_column_index + 4, 'SP dani', df.pop('SP dani'))
+        df.insert(date_column_index + 5, 'SP prijevoz', df.pop('SP prijevoz'))
+        df.insert(date_column_index + 6, 'DODATI dani', df.pop('DODATI dani'))
+        df.insert(date_column_index + 7, 'UKUPNO dani', df.pop('UKUPNO dani'))
 
         # Step 7: Insert SP sati
         # First, 'SP sati' column by multiplying 'SP dani' by 8
