@@ -12,8 +12,8 @@ st.write("Broj dana troška za prijevoz.")
 
 #Enter month and year for the dates
 # User input for month and year
-month = st.text_input("Unesite mjesec (npr. '03'):", value='03')
-year = st.text_input("Unesite godinu (npr. '2025'):", value='2025')
+month = st.text_input("Unesite mjesec (npr. '04'):")
+year = st.text_input("Unesite godinu (npr. '2025'):")
 
 # Check if the month and year are entered correctly
 if not month or not year:
@@ -48,6 +48,12 @@ else:
         # Step 1: Remove columns that start with "Su" or "Ne" and rename totals to hours colums
         columns_to_remove = [col for col in df.columns if col.startswith("Su") or col.startswith("Ne")]
         df.drop(columns=columns_to_remove, inplace=True)
+        # Find columns that contain the value 'P8'
+        cols_to_drop = [col for col in df.columns if 'P8' in df[col].values]
+
+        # Drop those columns
+        df.drop(columns=cols_to_drop, inplace=True)
+
 
         #Rename hour columns
         # List of columns to rename
