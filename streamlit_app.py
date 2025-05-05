@@ -25,7 +25,7 @@ else:
 
     # Process files if uploaded and inputs are valid
     if uploaded_masterteam and uploaded_pn and st.button('Spoji podatke i pripremi izvještaj'):
-        df = pd.read_excel(uploaded_masterteam, header=3, engine='xlrd')
+        df = pd.read_excel(uploaded_masterteam, header=3, engine='openpyxl')
         
         df_pn = pd.read_excel(uploaded_pn, header=3, engine='xlrd')
                 # Filter out unnamed columns
@@ -51,7 +51,7 @@ else:
 
         #Rename hour columns
         # List of columns to rename
-        columns_to_rename = ['Rad', 'Rad od kuće','Praznik', 'G.O.', 'Dopust', 'Bolo.','HZZO','Školovanje','Pas. dež.']
+        columns_to_rename = ['Rad', 'Rad od kuće','Praznik', 'G.O.', 'Dopust', 'Bolo.','HZZO','Školovanje','Sl. dan']
 
         # Rename the specified columns by adding 'sati' to each column name
         df.rename(columns={col: col + ' sati' for col in columns_to_rename}, inplace=True)
@@ -276,7 +276,7 @@ else:
 
         #Step 8: Insert ukupno sati
         # Assuming the columns 'Praznik', 'G.O.', '#G.O.', 'Dopust', 'HZZO' exist in df
-        df['Ukupno sati bez sati SP (SP sati uračunato u Rad sati)'] = df[['Rad sati', 'Rad od kuće sati', 'Praznik sati', 'G.O. sati', 'Dopust sati', 'Bolo. sati','HZZO sati','Školovanje sati','Pas. dež. sati']].sum(axis=1)
+        df['Ukupno sati bez sati SP (SP sati uračunato u Rad sati)'] = df[['Rad sati', 'Rad od kuće sati', 'Praznik sati', 'G.O. sati', 'Dopust sati', 'Bolo. sati','HZZO sati','Školovanje sati','Sl. dan sati']].sum(axis=1)
         # Report
         st.write(df)
         # Create an Excel workbook and add the DataFrame to it
