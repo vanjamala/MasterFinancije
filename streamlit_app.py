@@ -15,6 +15,27 @@ st.write("Broj dana troška za prijevoz.")
 month = st.text_input("Unesite mjesec (npr. '04'):")
 year = st.text_input("Unesite godinu (npr. '2025'):")
 
+def read_excel_file(uploaded_file, header_row=3):
+    if uploaded_file is None:
+        return None
+
+    file_extension = uploaded_file.name.split('.')[-1].lower()
+
+    try:
+        if file_extension == 'xlsx':
+            # Use openpyxl for xlsx
+            df = pd.read_excel(uploaded_file, header=header_row, engine='openpyxl')
+        elif file_extension == 'xls':
+            # Use xlrd for xls (make sure xlrd < 2.0 is installed)
+            df = pd.read_excel(uploaded_file, header=header_row, engine='xlrd')
+        else:
+            st.error(f"Unsupported file type: {file_extension}")
+            return None
+        return df
+    except Exception as e:
+        st.error(f"Error reading file {uploaded_file.name}: {e}")
+        return None
+
 # Check if the month and year are entered correctly
 if not month or not year:
     st.warning("Molimo unesite mjesec i godinu prije nego što nastavite.")
@@ -25,9 +46,9 @@ else:
 
     # Process files if uploaded and inputs are valid
     if uploaded_masterteam and uploaded_pn and st.button('Spoji podatke i pripremi izvještaj'):
-        df = pd.read_excel(uploaded_masterteam, header=3, engine='openpyxl')
+        df = read_excel_file(uploaded_masterteam)
         
-        df_pn = pd.read_excel(uploaded_pn, header=3, engine='xlrd')
+        df_pn = read_excel_file(uploaded_pn)
                 # Filter out unnamed columns
         df = df.loc[:, ~df.columns.str.contains('^Unnamed', na=False)]
         # Drop rows where 'Fond' equals 'Fond' or is empty
